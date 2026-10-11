@@ -1,0 +1,270 @@
+
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Compteur de doses</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 400px;
+            margin: 30px auto;
+            padding: 20px;
+            text-align: center;
+            background-color: #f5f5f5;
+        }
+
+        h1 {
+            font-size: 28px;
+        }
+
+        .doses {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin: 25px 0;
+        }
+
+        .dose {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            padding: 18px 8px;
+            background-color: white;
+            border: 2px solid #cccccc;
+            border-radius: 12px;
+            font-size: 20px;
+            cursor: pointer;
+        }
+
+        .dose:has(input:checked) {
+            border-color: #087f5b;
+            background-color: #e6fcf5;
+        }
+
+        input[type="radio"] {
+            width: 22px;
+            height: 22px;
+        }
+
+        button {
+            width: 100%;
+            padding: 18px;
+            border: none;
+            border-radius: 12px;
+            font-size: 22px;
+            font-weight: bold;
+            color: white;
+            background-color: #087f5b;
+            cursor: pointer;
+        }
+
+        button:active {
+            opacity: 0.8;
+        }
+
+        .stop {
+    background-color: #c92a2a;
+    margin-top: 10px;
+}
+    </style>
+</head>
+
+<body>
+    <h1>Compteur de doses</h1>
+    <p>Choisis le nombre de doses</p>
+
+    <div class="doses">
+        <label class="dose">
+            <input type="radio" name="doses" value="1">
+            1 dose
+        </label>
+
+        <label class="dose">
+            <input type="radio" name="doses" value="2">
+            2 doses
+        </label>
+
+        <label class="dose">
+            <input type="radio" name="doses" value="3" checked>
+            3 doses
+        </label>
+
+        <label class="dose">
+            <input type="radio" name="doses" value="4">
+            4 doses
+        </label>
+
+        <label class="dose">
+            <input type="radio" name="doses" value="5">
+            5 doses
+        </label>
+
+        <label class="dose">
+            <input type="radio" name="doses" value="6">
+            6 doses
+        </label>
+
+        <label class="dose">
+            <input type="radio" name="doses" value="7">
+            7 doses
+        </label>
+
+        <label class="dose">
+            <input type="radio" name="doses" value="8">
+            8 doses
+        </label>
+    </div>
+
+    <p id="status">Prêt à démarrer</p>
+    <button type="button" onclick="demarrer()">START</button>
+    <button type="button" class="stop" onclick="annuler()">STOP</button>
+
+    <script>
+        let voixFrancaise = null;
+
+        let minuterie = null;
+        let temporisateurDose = null;
+        let comptageEnCours = false;
+
+    function chargerVoix() {
+        const voix = speechSynthesis.getVoices();
+
+        voixFrancaise = voix.find(v => v.lang.startsWith("fr")) || null;
+    }
+
+    chargerVoix();
+    speechSynthesis.onvoiceschanged = chargerVoix;
+    
+    
+function demarrer() {
+    if (comptageEnCours) {
+        return;
+    }
+
+    comptageEnCours = true;
+
+    let secondes = 5;
+    const status = document.getElementById("status");
+
+    speechSynthesis.cancel();
+
+
+    const testVoix = new SpeechSynthesisUtterance("Prêt");
+    testVoix.lang = "fr-FR";
+    testVoix.volume = 1;
+    testVoix.rate = 0.8;
+
+    if (voixFrancaise) {
+        testVoix.voice = voixFrancaise;
+    }
+
+    speechSynthesis.speak(testVoix);
+
+
+    status.textContent = "Prépare-toi : " + secondes;
+
+    minuterie = setInterval(() => {
+        secondes--;
+
+        if (secondes > 0) {
+            status.textContent = "Prépare-toi : " + secondes;
+        } else {
+            clearInterval(minuterie);
+            status.textContent = "Préparation terminée !";
+
+            const nombreDoses = parseInt(
+                document.querySelector('input[name="doses"]:checked').value,
+                10
+            );
+
+            let doseActuelle = 1;
+
+            
+
+function annoncerDose() {
+    if (doseActuelle > nombreDoses) {
+        speechSynthesis.cancel();
+
+
+    const termine = new SpeechSynthesisUtterance("Terminé");
+    termine.lang = "fr-FR";
+    termine.volume = 1;
+
+    if (voixFrancaise) {
+        termine.voice = voixFrancaise;
+    }
+
+    termine.onend = () => {
+        comptageEnCours = false;
+        status.textContent = "Terminé";
+    };
+
+    speechSynthesis.speak(termine);
+
+        return;
+    }
+
+    const nombres = [
+        "Un", "Deux", "Trois", "Quatre",
+        "Cinq", "Six", "Sept", "Huit"
+    ];
+
+    status.textContent =
+        "Dose " + doseActuelle + " sur " + nombreDoses;
+
+    speechSynthesis.cancel();
+
+    const message = new SpeechSynthesisUtterance(
+        nombres[doseActuelle - 1]
+    );
+
+    message.lang = "fr-FR";
+    message.volume = 1;
+
+    if (voixFrancaise) {
+        message.voice = voixFrancaise;
+    }
+
+    speechSynthesis.speak(message);
+
+    doseActuelle++;
+
+    if (doseActuelle <= nombreDoses) {
+        temporisateurDose = setTimeout(annoncerDose, 2000);
+    } else {
+        temporisateurDose = setTimeout(annoncerDose, 2000);
+    }
+}
+
+
+            annoncerDose();
+        }
+    }, 1000);
+
+    
+}
+
+function annuler() {
+    if (minuterie !== null) {
+        clearInterval(minuterie);
+        minuterie = null;
+    }
+
+    if (temporisateurDose !== null) {
+        clearTimeout(temporisateurDose);
+        temporisateurDose = null;
+    }
+
+    speechSynthesis.cancel();
+
+    document.getElementById("status").textContent = "Comptage annulé";
+    comptageEnCours = false;
+}
+
+</script>
+</body>
+</html>
